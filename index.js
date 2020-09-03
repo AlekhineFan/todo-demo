@@ -1,110 +1,95 @@
-let todos = [];
 class Todo {
-    constructor(text){
+    constructor(text, dom){
+        this.isCompleted = false;
+        this.dom = dom;
+        this.markCompletedButtonHTML = `<img src="./images/check.png" class="completed">`;
+        this.deleteButtonHTML = `<img src="./images/trash.png" class="delete">`;
+        this.editButtonHTML = `<img src="./images/edit.png" class="edit">`;
+        this.dom.innerHTML = `<span></span>${this.markCompletedButtonHTML}${this.deleteButtonHTML}${this.editButtonHTML}`;
+        this.setText(text);
+    }
+
+    setText(text){
         this.text = text;
-        this. isCompleted = false;
+        this.dom.getElementsByTagName('span')[0].innerHTML = text;
     }
 }
 
-let buttonAdd = document.getElementById("input-btn");
-let buttonClear = document.getElementById("clear-btn");
-let list = document.getElementById("todo-items");
-let listItems = document.getElementsByTagName("p");
-let editedElementIndex = undefined;
-let todoText = document.getElementById("input-text");
+class TodoApp {
+    constructor(){
+        this.todos = [];
+        this.listDom = document.getElementById('todo-items');
+        this.todoText = document.getElementById("input-text");
+        this.editedElementIndex = undefined;
+        this.buttonSave = document.querySelector("#save-btn");
+        this.initButtons();
+        this.buttonSave.style.display = 'none';
+    }
 
-const markCompletedButtons = document.getElementsByClassName("completed");
-const buttonDelete = document.getElementsByClassName("delete");
-const buttonEdit = document.getElementsByClassName("edit");
-const buttonSave = document.querySelector("#save-btn");
+    initButtons(){
+        document.getElementById("input-btn").addEventListener("click", this.addTodo.bind(this));
+        document.getElementById("clear-btn").addEventListener("click", this.clearList.bind(this));
+        this.buttonSave.addEventListener("click", this.addListenerToSaveButton.bind(this));
+    }
 
-const markCompletedButtonHTML = `<img src="./images/check.png" class="completed">`;
-const deleteButtonHTML = `<img src="./images/trash.png" class="delete">`;
-const editButtonHTML = `<img src="./images/edit.png" class="edit">`;
-
-
-addTodo = () => {
-    list.innerHTML = null; 
-    
-    let td = new Todo(todoText.value);
-    todos.push(td);
-
-    for(let i = 0; i < todos.length; i++){
-        list.innerHTML += `<p>${todos[i].text}${markCompletedButtonHTML}${deleteButtonHTML}${editButtonHTML}</p>`;
-        if(todos[i].isCompleted){
-        listItems[i].className += " item-completed";
+    addTodo(){
+        if(this.todoText.value){
+            let todo = new Todo(this.todoText.value, document.createElement("p"));
+            this.listDom.appendChild(todo.dom);
+            this.todos.push(todo);
+        
+            this.addListenersToCompletedButtons(todo);
+            this.addListenersToDeleteButtons(todo);
+            this.addListenersToEditButtons(todo);
+        
+            this.todoText.value = '';
         }
     }
-
-    addListenersToCompletedButtons();
-    addListenersToDeleteButtons();
-    addListenersToEditButtons();
-    addListenerToSaveButton();
-
-    todoText.value = null;
-}
-
-addListenersToCompletedButtons = () => {
-    for(let i = 0; i < markCompletedButtons.length; i++){
-        let btn = markCompletedButtons[i];
-        btn.addEventListener("click", () => {
-            let status = btn.parentElement.className.includes("item-completed");
-            if(!status){
-                btn.parentElement.className += " item-completed";
-                todos[i].isCompleted = true;
-            } else {
-                btn.parentElement.className -= " item-completed";
-                todos[i].isCompleted = false;
-            }
+    
+    addListenersToCompletedButtons(todo){
+        todo.dom.getElementsByClassName('completed')[0].addEventListener('click', () => {
+            todo.isCompleted = !todo.isCompleted;
+            if(todo.isCompleted && !todo.dom.classList.contains('item-completed'))
+                todo.dom.classList.add('item-completed');
+            if(!todo.isCompleted && todo.dom.classList.contains('item-completed'))
+                todo.dom.classList.remove('item-completed');
         });
     }
-}
-
-addListenersToDeleteButtons = () => {
-    for(let dbtn of buttonDelete){
-        dbtn.addEventListener("click", () => {
-            let p = dbtn.parentElement;
-            p.style.display = "none";
-            let idx = findIndex(dbtn);
-            todos.splice(idx, 1);
+    
+    addListenersToDeleteButtons(todo){
+        todo.dom.getElementsByClassName('delete')[0].addEventListener('click', () => {
+            let index = this.findIndex(todo);
+            this.todos.splice(index, 1);
+            this.listDom.removeChild(todo.dom);
         });
     }
-}
+    
+    addListenersToEditButtons(todo){
+        todo.dom.getElementsByClassName('edit')[0].addEventListener('click', () => {
+            this.editedElementIndex = this.findIndex(todo);
+            this.todoText.value = todo.text;
 
-addListenersToEditButtons = () => {
-    for(let edbtn of buttonEdit){
-        edbtn.addEventListener("click", () => {
-            todoText.value = edbtn.parentElement.innerText;
-            editedElementIndex = findIndex(edbtn);
+            this.buttonSave.style.display = 'block';
         });
     }
-}
+    
+    addListenerToSaveButton(){
+        let todo = this.todos[this.editedElementIndex];
 
-addListenerToSaveButton = () => {
-    buttonSave.addEventListener("click", () => {
-        listItems[editedElementIndex].innerHTML = `${todoText.value}${markCompletedButtonHTML}${deleteButtonHTML}${editButtonHTML}`;
-        addListenersToCompletedButtons();
-        addListenersToDeleteButtons();
-        addListenersToEditButtons();
-
-        //todoText.value = null;
-    });
-}
-
-clearList = () => {
-    list.innerHTML = null;
-    todos = [];
-}
-
-findIndex = (e) => {
-    let idx = 0;
-    let p = e.parentElement;
-    while(p = p.previousSibling){
-        idx++;
+        todo.setText(this.todoText.value);
+        this.editedElementIndex = undefined;
+        this.todoText.value = '';
+        this.buttonSave.style.display = 'none';
     }
-    return idx;
+    
+    clearList(){
+        this.listDom.innerHTML = '';
+        this.todos = [];
+    }
+    
+    findIndex(todo){
+        return [...this.listDom.children].indexOf(todo.dom);
+    }
 }
 
-
-buttonAdd.addEventListener("click", addTodo);
-buttonClear.addEventListener("click", clearList);
+new TodoApp();
