@@ -48,11 +48,14 @@ class TodoApp {
     
     addListenersToCompletedButtons(todo){
         todo.dom.getElementsByClassName('completed')[0].addEventListener('click', () => {
-            todo.isCompleted = !todo.isCompleted;
-            if(todo.isCompleted && !todo.dom.classList.contains('item-completed'))
-                todo.dom.classList.add('item-completed');
-            if(!todo.isCompleted && todo.dom.classList.contains('item-completed'))
-                todo.dom.classList.remove('item-completed');
+/*
+**             todo.isCompleted = !todo.isCompleted;
+**             if(todo.isCompleted && !todo.dom.classList.contains('item-completed'))
+**                 todo.dom.classList.add('item-completed');
+**             if(!todo.isCompleted && todo.dom.classList.contains('item-completed'))
+**                 todo.dom.classList.remove('item-completed');
+*/
+            todo.dom.classList.toggle("item-completed");
         });
     }
     
